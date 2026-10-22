@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050815">
+<title>VEGAS-X</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<style>
+body{margin:0;background:#0f172a;color:#fff;font-family:ui-sans-serif,system-ui,sans-serif}
+.sb{scrollbar-width:thin;scrollbar-color:#3b82f6cc #1e293b4d}
+.sb::-webkit-scrollbar{height:8px}.sb::-webkit-scrollbar-track{background:#1e293b4d;border-radius:4px}.sb::-webkit-scrollbar-thumb{background:#3b82f6cc;border-radius:4px}
+#menu{overflow:hidden;max-height:0;opacity:0;transition:max-height .45s,opacity .35s}
+#menu.open{opacity:1}
+@keyframes vxIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.shine{animation:shine 2.5s ease-in-out infinite}
+@keyframes shine{0%{transform:translateX(100%) skewX(-15deg);opacity:0}50%{opacity:1}100%{transform:translateX(-100%) skewX(-15deg);opacity:0}}
+</style>
+</head>
+<body>
+<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+
+<header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+ <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="flex justify-between items-center h-16">
+   <a href="#/" id="logo" class="flex items-center"></a>
+   <nav id="nav" class="hidden md:flex items-center space-x-8"></nav>
+   <div class="flex items-center space-x-4">
+    <a href="#/vip" class="ml-4 hidden md:flex items-stretch min-w-[130px] max-w-[220px] rounded-lg overflow-hidden border border-slate-600 bg-slate-700/90" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="VIP level 0">
+     <div class="flex-1 min-w-0 h-8 relative overflow-hidden flex items-center justify-center">
+      <div class="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 to-emerald-500" style="width:0%"></div>
+      <span class="relative z-10 lg:text-base md:text-xs font-semibold px-2 truncate w-full text-center u-name"></span>
+     </div>
+     <div class="flex-shrink-0 w-8 h-8 bg-slate-600 flex items-center justify-center border-l border-slate-500"><span class="text-sm font-bold text-emerald-400">0.0</span></div>
+    </a>
+    <div class="flex items-center space-x-2">
+     <a href="#/slots" class="md:hidden flex items-center justify-center bg-slate-800 rounded-lg p-2" id="mPlay"></a>
+     <a href="#" data-toast="Balance: 0" class="flex items-center bg-slate-800 rounded-lg px-2 sm:px-3 py-2" id="bal"></a>
+     <a href="#" data-toast="Cashback: 0" class="flex items-center bg-slate-800 rounded-lg px-2 sm:px-3 py-2" id="cb"></a>
+    </div>
+    <button id="logout" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-colors"></button>
+    <button id="burger" aria-label="Menu" class="md:hidden p-2 rounded-lg hover:bg-slate-800"></button>
+   </div>
+  </div>
+  <div id="menu" class="md:hidden border-t border-slate-800"></div>
+ </div>
+</header>
+
+<main id="v"></main>
+
+<footer class="bg-slate-950 border-t border-slate-800">
+ <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+  <div class="flex flex-col md:flex-row md:justify-between gap-12">
+   <div class="space-y-6">
+    <div id="flogo"></div>
+    <p class="text-gray-400 leading-relaxed">Your favorite online casino. Fair, fast, and fun gaming experience.</p>
+    <div class="flex space-x-4 text-gray-400" id="social"></div>
+   </div>
+   <div class="space-y-6 md:flex md:flex-col md:items-end md:text-right">
+    <h3 class="text-lg font-semibold">Games</h3>
+    <ul class="space-y-3" id="flinks"></ul>
+   </div>
+  </div>
+  <div class="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+   <div class="text-gray-400 text-sm">© 2025 VEGAS-X. All rights reserved.</div>
+   <button data-toast="Language selection is not available in this demo" class="flex items-center space-x-2 bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-gray-300 hover:text-white text-sm">🇺🇸 English</button>
+   <div class="flex items-center space-x-6 text-sm text-gray-400"><span>18+ Only</span><span>•</span><span>Play Responsibly</span><span>•</span><span>BeGambleAware.org</span></div>
+  </div>
+ </div>
+</footer>
+</div>
+<div id="toasts" class="fixed left-1/2 -translate-x-1/2 bottom-6 z-[9999] flex flex-col gap-2 items-center w-[calc(100%-2rem)] max-w-md pointer-events-none"></div>
+
+<script>
+(()=>{
+const USER='ilyass3428888';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+/* ---------- Icons (lucide paths) ---------- */
+const P={
+home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+play:'<polygon points="5 3 19 12 5 21 5 3"/>',
+gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+crown:'<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
+trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+out:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+menu:'<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+eyeoff:'<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>',
+mail:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+pause:'<rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/>',
+link:'<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/>',
+arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+lock:'<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+sort:'<path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/>',
+grid:'<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+list:'<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>',
+globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+check:'<path d="M20 6 9 17l-5-5"/>'
+};
+const ic=(n,c='w-5 h-5')=>`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${c}">${P[n]}</svg>`;
+
+/* ---------- Logo (SVG placeholder, replace with your own image if you like) ---------- */
+const logo=(h=40)=>`<svg viewBox="-8 0 340 60" height="${h}" class="w-auto" role="img" aria-label="VEGAS-X"><rect x="2" y="8" width="44" height="40" rx="6" fill="#e5e7eb" stroke="#f59e0b" stroke-width="3" transform="rotate(-6 24 28)"/><text x="24" y="33" font-size="9" font-weight="900" text-anchor="middle" fill="#6b21a8">VEGAS X</text><text x="56" y="46" font-family="Arial Black,Impact,sans-serif" font-size="42" font-weight="900" fill="#86198f" stroke="#facc15" stroke-width="3" paint-order="stroke">VEGAS-X</text></svg>`;
+$('#logo').innerHTML=logo(40); $('#flogo').innerHTML=logo(40);
+
+/* ---------- Header / footer wiring ---------- */
+const NAV=[['#/','Home','home'],['#/slots','Games','play'],['#/bonuses','Bonuses','gift'],['#/vip','VIP','crown'],['#/tournaments','Tournaments','trophy'],['#/profile','Profile','user']];
+$('#nav').innerHTML=NAV.map(n=>`<a href="${n[0]}" class="flex items-center text-gray-300 hover:text-emerald-400 transition-colors duration-200"><span>${n[1]}</span></a>`).join('');
+$('#menu').innerHTML=NAV.map(n=>`<a href="${n[0]}" class="flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-slate-800 hover:text-emerald-400 border-b border-slate-800">${ic(n[2])}<span>${n[1]}</span></a>`).join('');
+$('#mPlay').innerHTML=ic('play','w-5 h-5 text-emerald-400');
+$('#bal').innerHTML=ic('wallet','w-4 h-4 text-emerald-400 mr-1 sm:mr-2')+'<span class="text-emerald-400 font-semibold text-sm sm:text-base">0</span>';
+$('#cb').innerHTML=ic('gift','w-4 h-4 text-purple-400 mr-1 sm:mr-2')+'<span class="text-purple-400 font-semibold text-sm sm:text-base">0</span>';
+$('#logout').innerHTML=ic('out','w-4 h-4')+'<span class="hidden sm:inline">Logout</span>';
+$('#burger').innerHTML=ic('menu');
+$$('.u-name').forEach(e=>e.textContent=USER);
+$('#social').innerHTML=[0,1,2,3].map(()=>`<a href="#" class="hover:text-emerald-400">${ic('globe')}</a>`).join('');
+$('#flinks').innerHTML=['Slots','Fishing Games','Roulette Games','Racing Games','Table Games'].map(t=>`<li><button data-go="#/slots" class="text-gray-400 hover:text-emerald-400 transition-colors">${t}</button></li>`).join('');
+
+/* ---------- Toast ---------- */
+function toast(m,t=''){const e=document.createElement('div');
+ e.className='pointer-events-auto w-full px-4 py-3 rounded-lg text-sm font-medium border shadow-2xl '+(t==='ok'?'bg-emerald-950 border-emerald-500':t==='err'?'bg-red-950 border-red-500':'bg-slate-800 border-slate-600');
+ e.style.animation='vxIn .25s ease-out';e.textContent=m;$('#toasts').append(e);setTimeout(()=>e.remove(),2800)}
+
+/* ---------- Helpers ---------- */
+const card='bg-slate-800/50 border border-slate-700 rounded-lg p-6';
+const money=n=>'$'+n.toFixed(2).replace('.',',');
+const wrap=(c,w='max-w-7xl')=>`<div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white"><div class="${w} mx-auto px-4 sm:px-6 lg:px-8 py-8">${c}</div></div>`;
+const hue=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))%360,7);
+const thumb=(name,w=300,h=400)=>{const a=hue(name),b=(a+50)%360;
+ return 'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${a},70%,45%)"/><stop offset="1" stop-color="hsl(${b},70%,20%)"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><text x="50%" y="50%" fill="#fff" font-family="Arial" font-weight="bold" font-size="${Math.round(w/11)}" text-anchor="middle" dominant-baseline="middle">${name.replace(/([a-z])([A-Z0-9])/g,'$1 $2')}</text></svg>`)};
+const tag=(t,c)=>`<span class="px-2 py-1 rounded ${c}">${t}</span>`;
+
+/* ================= PAGES ================= */
+const pages={};
+
+/* ---- HOME ---- */
+const PROMOS=[['TOURNAMENTS','Multiple slots tournaments available every day! Low risk High gain excitement awaits you!','#/tournaments'],['MY JACKPOT','Get lucky numbers every time you collect a deposit and try to match them in My Jackpot','#/bonuses'],['WAGER Bonus','We double your deposit for double the enjoyment!','#/bonuses'],['VIP PROGRAM','All players are included in the VIP program. Level up by playing slots.','#/vip'],['PROGRESSIVE JACKPOTS','Every win in slots has a chance to award one of the JACKPOTS!'],['HAPPY HOUR','Increased CASHBACK bonus during HAPPY HOUR.'],['GOLD Bonus','Every VIP level-up after level 4 comes with a guaranteed credit bonus!','#/vip'],['FREE ROUNDS Bonus','Daily randomly awarded free rounds in slot games.'],['Daily $1 Bonus',"Out of credits? No worries — we've got you covered!",'#/bonuses'],['CASHBACK Bonus','Starting from 20% up to 40% for VIP players.','#/bonuses']];
+const WINS=[['2','2***88','Ultra Seven','32800','Free spin'],['9','9****fa','Racing Horses','18600','Free spin'],['T','ti******are','Cool Diamonds II','18500','500'],['3','33***813','KA Fish Party','16600','100'],['2','2***90','Ultra Seven','12000','300']];
+pages.home=()=>`
+<section class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-purple-950">
+ <div class="absolute inset-0"><div class="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse"></div><div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div></div>
+ <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-10 rounded-2xl overflow-hidden border border-slate-800/70 shadow-2xl bg-[#04061a]">
+   <div class="relative w-full aspect-[21/6] flex items-center justify-center p-4">${logo(200).replace('height="200"','style="max-height:100%;width:80%"')}
+    <button id="pauseBtn" class="absolute bottom-3 right-3 bg-slate-900/80 text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1 shadow-md" aria-label="Pause logo video">${ic('pause','w-3.5 h-3.5')}</button></div></div>
+  <div class="mb-8 flex flex-col items-center">
+   <button data-go="#/slots" class="group bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700 text-white px-8 py-3 rounded-xl font-bold text-xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-emerald-500/40 flex items-center gap-3">
+    <span class="text-4xl">🎰</span><span>Play Games</span>${ic('play','w-6 h-6 group-hover:translate-x-1 transition-transform')}</button>
+   <p class="mt-3 text-sm text-gray-400">Browse all slot games, fishing games, and more</p></div>
+  <div class="mb-6 flex justify-center"><div class="inline-flex flex-col sm:flex-row items-center gap-3 sm:gap-4 px-10 py-3 bg-slate-800/40 backdrop-blur-sm border border-slate-700/30 rounded-lg text-center sm:text-left">
+   <div class="text-sm text-gray-400 pr-4">The classic VX Lobby is still available if you prefer the previous layout.</div>
+   <a href="#" data-toast="Classic Vegas-X (demo link)" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-md whitespace-nowrap">Visit Classic Vegas-X ${ic('link','w-3 h-3')}</a></div></div>
+  <div class="mb-6 text-center"><h2 class="text-4xl sm:text-5xl font-bold leading-tight"><span class="bg-gradient-to-r from-emerald-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Promotions</span></h2></div>
+  <section class="mb-8"><div class="overflow-x-auto sb"><div class="flex space-x-4 pb-4" style="width:max-content">
+   ${PROMOS.map(p=>`<div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-lg p-6 shadow-xl min-w-[280px] max-w-[320px] flex-shrink-0 flex flex-col">
+    <div class="w-full h-32 rounded-lg mb-4 overflow-hidden"><img src="${thumb(p[0],320,128)}" alt="${p[0]}" class="w-full h-full object-cover"></div>
+    <div class="flex flex-col flex-grow"><h3 class="text-lg font-semibold mb-3">${p[0]}</h3><p class="text-sm text-gray-300 leading-relaxed flex-grow mb-4">${p[1]}</p>
+    ${p[2]?`<button data-go="${p[2]}" class="w-full bg-slate-700/50 text-gray-300 py-2 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 border border-slate-600/50 hover:bg-slate-700"><span>Learn More</span>${ic('arrow','w-4 h-4')}</button>`:''}</div></div>`).join('')}
+  </div></div></section>
+ </div>
+</section>
+
+<section class="py-20 bg-slate-950"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+ <div class="bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-6 mb-12">
+  <div class="flex items-center justify-between flex-wrap gap-4 mb-4"><div><div class="text-gray-400 text-sm">Welcome back, ${USER}</div><div class="text-xl font-bold">VIP Level 0</div></div>
+   <div class="flex items-center gap-3"><span class="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-xl font-bold text-emerald-400">0</span><span class="text-yellow-400 font-semibold flex items-center gap-1">${ic('crown','w-5 h-5')}VIP</span></div></div>
+  <div class="flex justify-between text-sm text-gray-400 mb-2"><span>Progress to Level 1</span><span>0 / 10,000 XP</span></div>
+  <div class="w-full h-3 bg-slate-700 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400" style="width:0%"></div></div>
+  <div class="flex justify-between text-xs text-gray-500 mt-2"><span>0.0% Complete</span><span>Next Level</span></div></div>
+ <div class="grid lg:grid-cols-2 gap-10 items-center">
+  <div><h2 class="text-4xl lg:text-5xl font-bold mb-6">Gaming <span class="bg-gradient-to-r from-emerald-400 to-purple-400 bg-clip-text text-transparent">Experience</span></h2>
+   <p class="text-gray-300 text-lg leading-relaxed mb-8">Join hundreds of thousands of players in the ultimate online casino. Fair games, instant payouts, and endless entertainment.</p>
+   <div class="flex flex-wrap gap-4"><button data-go="#/slots" class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-8 py-3 rounded-lg font-semibold hover:scale-105 transition-transform">Start Playing</button><button data-go="#/bonuses" class="border border-slate-600 px-8 py-3 rounded-lg font-semibold hover:bg-slate-800">Learn More</button></div></div>
+  <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-6"><div class="flex items-center gap-4 mb-5"><img src="${thumb('Golden Dragon',120,120)}" class="w-16 h-16 rounded-xl object-cover" alt="Golden Dragon"><div><h3 class="text-xl font-bold">Golden Dragon</h3><p class="text-sm text-gray-400">Join the hottest fishing game now</p></div></div>
+   <div class="grid grid-cols-3 gap-3 text-center mb-5">${[['Players Online','11','text-emerald-400'],['Max Win','300000','text-yellow-400'],['Last Big Win','4000','text-purple-400']].map(s=>`<div class="bg-slate-700/50 rounded-lg p-3"><div class="text-xs text-gray-400">${s[0]}</div><div class="font-bold ${s[2]}">${s[1]}</div></div>`).join('')}</div>
+   <button data-go="#/slots" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 rounded-lg font-semibold">Join Game</button></div></div></div></section>
+
+<section class="py-20 bg-gradient-to-b from-slate-950 to-slate-900"><div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+ <div class="text-center mb-12"><h2 class="text-4xl font-bold mb-3">Game Categories</h2><p class="text-gray-400">Discover hundreds of games across all your favorite categories</p></div>
+ <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">${[['Fish Games','Modern exciting fishing games','60+ Games','🐟'],['Slots','Hundreds of exciting slots games','700+ Games','🎰'],['Table Games','Blackjack, Roulette, Keno, and more','25 Games','🃏'],['Tournaments','Compete for massive prizes with low risk','Slots tournaments','🏆']].map(c=>`<div class="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-emerald-500/50 transition-colors"><div class="text-4xl mb-4">${c[3]}</div><h3 class="text-xl font-semibold mb-2">${c[0]}</h3><p class="text-sm text-gray-400 mb-4">${c[1]}</p><span class="text-emerald-400 text-sm font-medium">${c[2]}</span></div>`).join('')}</div>
+ <div class="text-center mb-8"><h2 class="text-4xl font-bold mb-3">Big Winners</h2><p class="text-gray-400">Celebrate the biggest payouts happening across the platform right now</p></div>
+ <div class="overflow-x-auto bg-slate-800/50 border border-slate-700 rounded-xl"><table class="w-full text-left text-sm"><thead class="text-gray-400 border-b border-slate-700"><tr>${['Player','Game','Win','Bet Amount'].map(h=>`<th class="px-4 py-3 font-medium">${h}</th>`).join('')}</tr></thead><tbody>
+ ${WINS.map(w=>`<tr class="border-b border-slate-700/50 last:border-0"><td class="px-4 py-3"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold">${w[0]}</span>${w[1]}</div></td><td class="px-4 py-3">${w[2]}</td><td class="px-4 py-3 text-emerald-400 font-semibold">${w[3]}</td><td class="px-4 py-3 text-gray-300">${w[4]}</td></tr>`).join('')}</tbody></table></div>
+</div></section>`;
+
+/* ---- GAMES ---- */
+const GAMES='WildDragon,Billyonaire,paradise,WildDiamonds,BookOfFortune,UltraSeven,BillysGame,BookOfAztec,WolfMoon,Keno,BellsOnFireRombo,WildShark,MerryFruits,BellsOnFire,HotTwenty,Hot7,Wild7,HotStar,Admiral,TwentySeven,MagicIdol,HotScatter,HotNeon,LadyLuck,LuckyCoin,BlueDolphin,WildStars,FortunasFruits,Casanova,HotDiamonds,PartyTime,AllWaysFruits,CoolDiamondsII,DragonsPearl,WildRespin,EyeOfRa,LadyJoker,MagicOwl,ArisingPhoenix,DiamondCats,LuckyBells,RoyalUnicorn,GrandX,LuckyZodiac,MermaidsGold,RomanLegion,DragonsKingdom,MagicForest,BellsOnFireHot,Hot81,GoldenBook,DiamondMonkey,Casinova,RedChilli,Dynamite7,Fantastico,BigPanda,LadyLuck2,DiamondsOnFire,TweetyBirds'.split(',');
+const BRANDS='AMATIC,ARISTOCRAT,BGAMING,BOMBA,EGT,FISHING,LNW,NETENT,NOVOMATIC,PRAGMATIC,RACING,TABLE,WAZDAN'.split(',');
+pages.games=()=>wrap(`
+<div class="mb-3"><div class="flex items-center justify-between flex-wrap gap-3"><h1 class="text-4xl font-bold flex items-center">${ic('play','w-9 h-9 mr-3 text-emerald-400')}GAMES</h1>
+ <button id="mkHome" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-700/50 text-gray-400 border border-slate-600/50 hover:bg-slate-700 hover:text-gray-300">${ic('home','w-4 h-4')}<span class="text-xs">Make this homepage</span></button></div>
+ <p class="text-gray-400 mt-2">Choose from our collection of exciting slot games</p></div>
+<div class="mb-4 space-y-4">
+ <div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">${ic('search','w-5 h-5')}</span><input id="gq" type="text" placeholder="Search games..." class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-10 py-3 text-white focus:outline-none focus:border-emerald-400 transition-colors"></div>
+ <div class="flex flex-wrap gap-3 items-center">
+  <select id="gb" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-400"><option value="">All Brands</option>${BRANDS.map(b=>`<option value="${b.toLowerCase()}">${b}</option>`).join('')}</select>
+  <button id="gf" class="flex items-center space-x-2 px-3 py-2 rounded-lg border bg-slate-800 border-slate-700 text-gray-400" title="Favorites">${ic('heart','w-5 h-5')}</button>
+  <div class="flex items-center space-x-2 ml-auto"><button data-v="a" class="p-2 rounded-lg bg-emerald-500 text-white">${ic('grid','w-5 h-5')}</button><button data-v="b" class="p-2 rounded-lg bg-slate-800 text-gray-400 hover:text-white">${ic('list','w-5 h-5')}</button></div></div></div>
+<div id="gg" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2 sm:gap-3">
+ ${GAMES.map(g=>`<div class="g cursor-pointer relative" data-n="${g}"><div class="w-full rounded-lg overflow-hidden bg-slate-700 relative hover:ring-2 hover:ring-emerald-400 transition" style="aspect-ratio:3/4"><img loading="lazy" src="${thumb(g)}" alt="${g}" class="w-full h-full object-cover"></div><button class="fav absolute top-1 right-1 p-1 rounded-full bg-black/50 z-10 text-white" title="Add to favorites">${ic('heart','w-4 h-4')}</button></div>`).join('')}</div>
+<p id="gn" class="hidden text-gray-400 text-center py-12">No games found</p>`);
+
+/* ---- BONUSES ---- */
+const bcard=(t,b,d,rows,btn)=>`<div class="${card} flex flex-col"><div class="flex items-center justify-between mb-3"><h3 class="text-xl font-semibold">${t}</h3>${tag(b,b==='Active'?'bg-emerald-500/20 text-emerald-400 text-xs':'bg-yellow-500/20 text-yellow-400 text-xs')}</div><p class="text-gray-300 text-sm mb-4 flex-1">${d}</p><div class="space-y-2 text-sm mb-4">${rows.map(r=>`<div class="flex justify-between"><span class="text-gray-400">${r[0]}</span><span class="font-medium ${r[2]||''}">${r[1]}</span></div>`).join('')}</div>${btn?`<button data-go="#/slots" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 py-2 rounded-lg font-semibold">PLAY NOW</button>`:''}</div>`;
+pages.bonuses=()=>wrap(`
+<div class="mb-8"><h1 class="text-4xl font-bold mb-2 flex items-center">${ic('gift','w-9 h-9 mr-3 text-emerald-400')}Bonuses &amp; Rewards</h1><p class="text-gray-300">Discover amazing bonuses and rewards designed to enhance your gaming experience</p></div>
+<h2 class="text-2xl font-semibold mb-4">Active Bonuses</h2>
+<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
+${bcard('My Jackpot','Active','Match numbers and win prizes! Daily chance to win big by matching lucky numbers',[['Max Win:','Varies'],['Requirements:','Available daily']],1)}
+${bcard('Daily 100 Bonus','Active','Get a daily bonus of 100 if your balance is below 100',[['Max Win:','100'],['Requirements:','VIP Level 1+']])}
+${bcard('Cashback Bonus','Active','Up to 40% cashback on deposits (20% base + 20% VIP boost)',[['Max Win:','No limit'],['Requirements:','VIP Level 3+ for max']])}</div>
+<div class="${card} mb-12 border-yellow-500/30"><h2 class="text-2xl font-semibold mb-2 flex items-center">${ic('crown','w-6 h-6 mr-2 text-yellow-400')}VIP Exclusive Bonuses</h2><p class="text-gray-300 mb-6">Unlock these exclusive bonuses by leveling up in our VIP program. Play more, level up, and enjoy premium rewards!</p>
+<div class="grid gap-6 md:grid-cols-2">
+${bcard('Gold Bonus','VIP Exclusive','Collect guaranteed gold bonus as you play. Unlock higher amounts at higher VIP levels',[['Amount:','Up to 20000'],['Max Amount:','20000'],['Requirements:','VIP Level 4+']])}
+${bcard('Exclusive Tournaments','VIP Exclusive','VIP-only tournaments with higher rewards and better prize pools',[['Amount:','VIP Only'],['Max Amount:','Varies'],['Requirements:','VIP Level 3+']])}</div></div>
+<h2 class="text-2xl font-semibold mb-4">Types of Bonuses</h2>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-12">${[['Game Bonuses','Play special bonus games for extra rewards','🎮'],['Daily Bonuses','Get daily rewards just for being a member','📅'],['Cashback Rewards','Get money back on your deposits','💰'],['Free Rounds','Free spins on select slot games','🎰'],['VIP Bonuses','Exclusive bonuses for VIP members','👑'],['Tournament Rewards','Compete in exclusive tournaments for big prizes','🏆']].map(t=>`<div class="${card} !p-5 flex gap-4"><span class="text-3xl">${t[2]}</span><div><h3 class="font-semibold mb-1">${t[0]}</h3><p class="text-sm text-gray-400">${t[1]}</p></div></div>`).join('')}</div>
+<div class="${card}"><h2 class="text-2xl font-semibold mb-6">How Bonuses Work</h2><div class="grid gap-8 md:grid-cols-2">
+<div><h3 class="font-semibold text-emerald-400 mb-3">Earning Bonuses</h3><ul class="space-y-2 text-gray-300 text-sm list-disc pl-5"><li>Daily 100 bonus is available if balance is below 100</li><li>Cashback is applied automatically on deposits and collected when balance goes below 100</li><li>Free rounds are awarded randomly every day to a number of players</li><li>Play games to earn XP and level up for VIP bonuses</li></ul></div>
+<div><h3 class="font-semibold text-yellow-400 mb-3">VIP Program</h3><ul class="space-y-2 text-gray-300 text-sm list-disc pl-5"><li>Higher VIP levels unlock better bonuses</li><li>Level 3+ gets increased cashback. Starts at 6% and increases 2% per level up to 20% at Level 10+</li><li>Level 4+ unlocks Gold Bonus (up to 20000)</li><li>Access to exclusive VIP tournaments at Level 3+</li></ul></div></div></div>`);
+
+/* ---- VIP ---- */
+const LV=[['Bronze','10 000'],['Silver','15 000'],['Gold','37 500'],['Platinum','93 750'],['Diamond','234 375'],['Ruby','585 937'],['Sapphire','1 464 844'],['Emerald','3 662 109'],['Royal','9 155 274'],['Legend','22 888 183'],['Mythic','57 220 458']];
+pages.vip=()=>wrap(`
+<div class="mb-8"><h1 class="text-4xl font-bold mb-2 flex items-center">${ic('crown','w-9 h-9 mr-3 text-yellow-400')}VIP Program</h1><p class="text-gray-300">Unlock exclusive rewards, higher cashback, and premium benefits as you climb the VIP ladder</p></div>
+<div class="${card} mb-8"><div class="text-gray-400 mb-1">Welcome back, ${USER}</div><div class="flex items-center justify-between flex-wrap gap-3 mb-4"><h2 class="text-2xl font-bold">VIP Level 0 - Adventurer</h2><div class="text-center"><div class="text-3xl font-bold text-emerald-400">0</div><div class="text-xs text-gray-400">Current Level</div></div></div>
+<div class="flex justify-between text-sm text-gray-300 mb-2"><span>Progress to Level 1</span><span>0 / 10 000 XP</span></div><div class="w-full h-3 bg-slate-700 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400" style="width:0%"></div></div><div class="text-xs text-gray-400 mt-2">0.0% Complete • 10 000 XP to next level</div></div>
+<h2 class="text-2xl font-semibold mb-4">VIP Benefits</h2>
+<div class="grid gap-4 md:grid-cols-2 mb-10">${[['Daily $1,00 Bonus','Level 1+','Get a daily bonus of $1,00 if your balance is below $1,00'],['Increased Cashback bonus','Level 3+','up to 20% extra cashback on deposits. Max total cashback is 40%'],['Gold bonus','Level 4+','Collect guaranteed gold bonus at certain VIP levels. Starting from $5,00 up to $200,00'],['Exclusive Tournaments','Level 3+','VIP-only tournaments with higher rewards']].map(b=>`<div class="${card} !p-5"><div class="flex items-center justify-between mb-2"><h3 class="font-semibold">${b[0]}</h3>${tag(b[1],'bg-yellow-500/20 text-yellow-400 text-xs')}</div><p class="text-sm text-gray-300">${b[2]}</p></div>`).join('')}</div>
+<h2 class="text-2xl font-semibold mb-4">VIP Levels</h2>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">${LV.map((l,i)=>`<div class="${card} !p-5 opacity-80"><div class="flex items-center justify-between mb-2"><h3 class="font-semibold">Level ${i+1}${i===10?'+':''} ${l[0]}</h3>${ic('lock','w-4 h-4 text-gray-500')}</div><p class="text-sm text-gray-400">${l[1]} XP Required</p><span class="inline-block mt-3 text-xs px-2 py-1 rounded bg-slate-700 text-gray-400">Locked</span></div>`).join('')}</div>
+<div class="${card}"><h2 class="text-2xl font-semibold mb-6">How VIP Works</h2><div class="grid gap-8 md:grid-cols-2">
+<div><h3 class="font-semibold text-emerald-400 mb-3">Earning XP</h3><ul class="space-y-2 text-gray-300 text-sm list-disc pl-5"><li>Play slots and table games and place bets to earn XP</li><li>Participate in special events and tournaments to earn extra XP</li></ul></div>
+<div><h3 class="font-semibold text-yellow-400 mb-3">VIP Perks</h3><ul class="space-y-2 text-gray-300 text-sm list-disc pl-5"><li>Daily bonus of $1,00</li><li>Exclusive bonuses as you level up</li><li>Higher cashback bonus as you level up</li><li>Access to VIP Tournaments with higher rewards</li></ul></div></div></div>`);
+
+/* ---- TOURNAMENTS ---- */
+const T=[["Billy's Cup 5pm",1389],['Multiliners Cup 6pm',1390],['5Liners Cup 8pm',1391],['Hall of Fame 9pm',1392],['Noon Legends',1387],['Diamonds Cup 3pm',1388],["Billy's Cup 5pm",1395],['Multiliners Cup 6pm',1396],['5Liners Cup 8pm',1397],['Hall of Fame 9pm',1398],['Noon Legends',1393],['Diamonds Cup 3pm',1394]];
+const PRIZES=[[70,30,15,10,5],[90,40,20,15,10,5],[100,50,25,15,10,5]];
+const ORD=['1st','2nd','3rd','4th','5th','6th'];
+pages.tournaments=()=>wrap(`
+<div class="mb-8"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4"><div class="flex-1"><div class="flex items-center flex-wrap gap-2 mb-2"><h1 class="text-3xl sm:text-4xl font-bold flex items-center">${ic('trophy','w-9 h-9 mr-3 text-emerald-400')}<span class="whitespace-nowrap">Tournaments</span></h1>
+ <button id="how" class="p-1.5 sm:p-2 rounded-lg bg-slate-800/50 border border-slate-700 text-gray-400 hover:text-emerald-400 hover:border-emerald-400/50 flex items-center gap-1">${ic('info','w-5 h-5')}<span class="text-sm sm:text-base text-emerald-400">How it works</span></button></div><p class="text-sm sm:text-base text-gray-400">Compete in exciting tournaments and win amazing prizes</p></div>
+ <button id="mine" class="relative flex items-center justify-center space-x-2 bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-lg font-semibold hover:bg-slate-700 hover:border-yellow-400/50 overflow-hidden"><div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent shine"></div>${ic('trophy','w-5 h-5 text-yellow-400 relative')}<span class="relative z-10">My Tournaments</span></button></div></div>
+<div class="mb-6 space-y-4"><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">${ic('search','w-5 h-5')}</span><input id="tq" type="text" placeholder="Search tournaments by name or ID..." class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-10 pr-10 py-3 focus:outline-none focus:border-emerald-400"></div>
+ <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div class="flex items-center space-x-3"><span class="text-gray-300 text-sm">Show finished tournaments</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" class="sr-only peer"><div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div></label></div>
+  <div class="flex items-center space-x-2">${ic('sort','w-4 h-4 text-gray-400')}<label class="text-gray-300 text-sm">Sort by:</label><select id="ts" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm cursor-pointer focus:outline-none focus:border-emerald-400"><option value="t">Start Time</option><option value="f">Entry Fee</option><option value="p">Highest Prize</option></select><button id="td" title="Ascending" class="p-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700">${ic('sort','w-4 h-4')}</button></div></div></div>
+<div id="tg" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">${T.map((t,i)=>{const pr=PRIZES[i%3],day=i<6?22:23,hr=(i%6)*2+(i<6?2:0),full=i===0,fee=[1,2,2,3,2,1][i%6];
+ return `<div class="t ${card} flex flex-col" data-f="${fee}" data-p="${pr[0]}" data-i="${i}"><div class="mb-4"><button class="w-full text-left text-2xl font-bold mb-2 ${i===0?'text-yellow-400':'text-emerald-500'} bg-slate-700/30 hover:bg-slate-700/50 border border-slate-600/50 hover:border-emerald-500/50 rounded-lg px-4 py-3">${t[0]} #${t[1]}</button>
+ <div class="flex items-center flex-wrap gap-2 text-sm">${tag(i===0?'Running':'Open',i===0?'bg-purple-500/20 text-purple-400':'bg-emerald-500/20 text-emerald-400')}${tag('Most Wins','bg-purple-500/20 text-purple-400')}</div></div>
+ <div class="space-y-3 mb-4 flex-1">${[['Start Time',`${day}/10/2026 ${String(hr).padStart(2,'0')}:00:00`],['End Time',`${day}/10/2026 ${String(hr).padStart(2,'0')}:30:00`],['Start Credits','100 000'],['Entry Fee',`<span class="text-yellow-400 font-semibold">${money(fee)}</span>`],['Players',`<span class="font-semibold text-emerald-400">${full?110:31} joined</span> • Max: 110`],['Max Rebuys','3']].map(r=>`<div><div class="text-xs text-gray-500">${r[0]}</div><div class="text-sm">${r[1]}</div></div>`).join('')}</div>
+ <div class="mb-4"><div class="text-sm font-semibold text-gray-400 mb-2">Prize Pool</div><div class="space-y-2">${pr.map((p,k)=>`<div class="flex items-center justify-between bg-slate-700/50 rounded px-3 py-2"><span class="text-sm text-gray-300">${ORD[k]} Place</span><span class="text-sm font-semibold text-emerald-400">${money(p)}</span></div>`).join('')}</div></div>
+ <div class="flex gap-2"><button class="vg flex-1 py-2 rounded-lg border border-slate-600 text-gray-300 hover:bg-slate-700 text-sm">View Games</button>${full?'<button class="flex-1 py-2 rounded-lg bg-slate-700 text-gray-400 text-sm tf">Tournament Full</button>':'<button class="jn flex-1 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 font-semibold text-sm">JOIN</button>'}</div></div>`}).join('')}</div>
+<p id="tn" class="hidden text-gray-400 text-center py-12">No tournaments found</p>`);
+
+/* ---- PROFILE ---- */
+const pwd=(id,l,ph)=>`<div><label for="${id}" class="block text-sm font-medium text-gray-300 mb-2">${l}</label><div class="relative"><input id="${id}" type="password" placeholder="${ph}" class="w-full bg-slate-700 border border-slate-600 rounded-lg pl-4 pr-12 py-3 text-white focus:outline-none focus:border-emerald-400 transition-colors"><button type="button" class="eye absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-emerald-400" aria-label="Show password">${ic('eye')}</button></div></div>`;
+pages.profile=()=>wrap(`<div class="max-w-4xl mx-auto py-4">
+<div class="mb-8"><h1 class="text-4xl font-bold mb-2 flex items-center">${ic('user','w-9 h-9 mr-3 text-emerald-400')}Profile</h1><p class="text-gray-300">Manage your account settings</p></div>
+<div class="flex space-x-2 mb-6 border-b border-slate-700 pb-2">
+ <button data-tab="0" class="tab flex items-center space-x-2 px-4 py-2 rounded-t-lg font-medium bg-emerald-500/20 text-emerald-400 border-b-2 border-emerald-400">${ic('user','w-4 h-4')}<span>Profile</span></button>
+ <button data-tab="1" class="tab flex items-center space-x-2 px-4 py-2 rounded-t-lg font-medium text-gray-400 bg-slate-800/50">${ic('users','w-4 h-4')}<span>Referral</span></button></div>
+<div id="p0">
+ <div class="${card} mb-6"><h2 class="text-xl font-semibold mb-4">Account Information</h2><div><span class="text-gray-400">Username:</span><span class="ml-2 font-medium">${USER}</span></div></div>
+ <div class="${card} mb-6"><h2 class="text-xl font-semibold mb-4">Preferences</h2><div class="space-y-3">${['Hide in-game jackpot bar','Display news only once'].map((t,i)=>`<label class="flex items-start gap-3 cursor-pointer select-none"><input type="checkbox" data-pref="${i}" class="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-400 focus:ring-offset-0"><span class="text-gray-300">${t}</span></label>`).join('')}</div></div>
+ <div class="${card} mb-6"><div class="flex items-center space-x-2 mb-4">${ic('mail','w-5 h-5 text-emerald-400')}<h2 class="text-xl font-semibold">Email Settings</h2></div>
+  <form id="ef" class="space-y-4"><div><label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label><input id="email" type="email" placeholder="Enter your email address" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-emerald-400 transition-colors"></div>
+  <button type="submit" disabled class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed">Save Email</button></form></div>
+ <div class="${card} mb-6"><div class="flex items-center space-x-2 mb-4">${ic('lock','w-5 h-5 text-emerald-400')}<h2 class="text-xl font-semibold">Change Password</h2></div>
+  <form id="pf" class="space-y-4">${pwd('currentPassword','Current Password','Enter current password')}${pwd('newPassword','New Password','Enter new password')}${pwd('confirmPassword','Confirm New Password','Confirm new password')}
+  <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-3 rounded-lg font-semibold">Change Password</button></form></div></div>
+<div id="p1" class="hidden ${card}"><h2 class="text-xl font-semibold mb-4">Referral Program</h2><p class="text-gray-300 mb-4">Invite your friends and earn rewards when they join and play.</p>
+ <div class="flex gap-2"><input id="rl" readonly class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded-lg px-4 py-3" value="https://example.com/?ref=${USER}"><button id="rc" class="bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-3 rounded-lg font-semibold">Copy</button></div></div></div>`);
+
+/* ================= INTERACTIONS ================= */
+const init={
+home(r){let on=1;const b=$('#pauseBtn',r);b.onclick=()=>{on=!on;b.innerHTML=ic(on?'pause':'play','w-3.5 h-3.5');b.ariaLabel=on?'Pause logo video':'Play logo video'}},
+games(r){
+ const q=$('#gq',r),gs=$$('.g',r);let fav=0;
+ const f=()=>{const v=q.value.trim().toLowerCase();let n=0;gs.forEach(g=>{const s=(!v||g.dataset.n.toLowerCase().includes(v))&&(!fav||g.dataset.fav);g.hidden=!s;n+=s});$('#gn',r).classList.toggle('hidden',n>0)};
+ q.oninput=f;$('#gb',r).onchange=e=>{q.value=e.target.value;f()};
+ $('#gf',r).onclick=e=>{fav=!fav;e.currentTarget.classList.toggle('text-rose-400',!!fav);f()};
+ gs.forEach(g=>{g.onclick=()=>toast('Launching '+g.dataset.n+'…');$('.fav',g).onclick=e=>{e.stopPropagation();g.dataset.fav=g.dataset.fav?'':'1';$('svg',e.currentTarget).style.fill=g.dataset.fav?'#f43f5e':'none';f()}});
+ $('#mkHome',r).onclick=()=>toast('Games set as your homepage','ok');
+ $$('[data-v]',r).forEach(b=>b.onclick=()=>{$$('[data-v]',r).forEach(x=>{const a=x===b;x.classList.toggle('bg-emerald-500',a);x.classList.toggle('text-white',a);x.classList.toggle('bg-slate-800',!a);x.classList.toggle('text-gray-400',!a)});
+  $('#gg',r).className='grid gap-2 sm:gap-3 '+(b.dataset.v==='a'?'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7':'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5')})},
+tournaments(r){
+ const g=$('#tg',r),q=$('#tq',r);let asc=1;
+ const f=()=>{const v=q.value.trim().toLowerCase();let n=0;$$('.t',r).forEach(t=>{const s=!v||t.textContent.toLowerCase().includes(v);t.hidden=!s;n+=s});$('#tn',r).classList.toggle('hidden',n>0)};
+ const sort=()=>{const k=$('#ts',r).value;const key=t=>k==='f'?+t.dataset.f:k==='p'?+t.dataset.p:+t.dataset.i;
+  $$('.t',r).sort((a,b)=>(key(a)-key(b))*(asc?1:-1)).forEach(t=>g.append(t))};
+ q.oninput=f;$('#ts',r).onchange=sort;$('#td',r).onclick=e=>{asc=!asc;e.currentTarget.title=asc?'Ascending':'Descending';e.currentTarget.style.transform=asc?'':'scaleY(-1)';sort()};
+ $('input[type=checkbox]',r).onchange=()=>toast('No finished tournaments to show');
+ $('#how',r).onclick=()=>toast('Play the tournament games, climb the leaderboard and win prizes!');
+ $('#mine',r).onclick=()=>toast('You have not joined any tournaments yet');
+ $$('.jn',r).forEach(b=>b.onclick=()=>{b.textContent='JOINED';b.disabled=true;b.classList.add('opacity-60');toast('You joined the tournament','ok')});
+ $$('.tf',r).forEach(b=>b.onclick=()=>toast('This tournament is full','err'));
+ $$('.vg',r).forEach(b=>b.onclick=()=>location.hash='#/slots')},
+profile(r){
+ $$('.tab',r).forEach(t=>t.onclick=()=>{const i=+t.dataset.tab;$$('.tab',r).forEach(x=>{const a=x===t;['bg-emerald-500/20','text-emerald-400','border-b-2','border-emerald-400'].forEach(c=>x.classList.toggle(c,a));['text-gray-400','bg-slate-800/50'].forEach(c=>x.classList.toggle(c,!a))});$('#p0',r).hidden=i===1;$('#p1',r).classList.toggle('hidden',i===0)});
+ $('#rc',r).onclick=()=>navigator.clipboard?.writeText($('#rl',r).value).then(()=>toast('Referral link copied','ok'),()=>toast('Press Ctrl+C to copy'));
+ let s={};try{s=JSON.parse(localStorage.getItem('vx_prefs')||'{}')}catch(e){}
+ $$('[data-pref]',r).forEach(c=>{c.checked=!!s[c.dataset.pref];c.onchange=()=>{s[c.dataset.pref]=c.checked;try{localStorage.setItem('vx_prefs',JSON.stringify(s))}catch(e){}toast('Preference saved','ok')}});
+ const em=$('#email',r),eb=$('#ef button',r),re=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+ em.oninput=()=>{const ok=re.test(em.value.trim());eb.disabled=!ok;em.classList.toggle('border-red-500',!!em.value&&!ok)};
+ $('#ef',r).onsubmit=e=>{e.preventDefault();toast('Email saved successfully','ok')};
+ $$('.eye',r).forEach(b=>b.onclick=()=>{const i=$('input',b.parentNode),h=i.type==='password';i.type=h?'text':'password';b.innerHTML=ic(h?'eyeoff':'eye');b.ariaLabel=h?'Hide password':'Show password'});
+ $('#pf',r).onsubmit=e=>{e.preventDefault();const c=$('#currentPassword',r).value,n=$('#newPassword',r).value,k=$('#confirmPassword',r).value;
+  if(!c)return toast('Enter your current password','err');if(n.length<6)return toast('New password must be at least 6 characters','err');if(n!==k)return toast('Passwords do not match','err');
+  e.target.reset();toast('Password changed successfully','ok')}}
+};
+
+/* ---------- Router ---------- */
+const R={'':'home','/':'home','/slots':'games','/bonuses':'bonuses','/vip':'vip','/tournaments':'tournaments','/profile':'profile'};
+const menu=$('#menu'),setMenu=o=>{menu.classList.toggle('open',o);menu.style.maxHeight=o?menu.scrollHeight+'px':'0px'};
+function route(){const n=R[location.hash.slice(1)]||'home',v=$('#v');v.innerHTML=pages[n]();init[n]&&init[n](v);document.title='VEGAS-X | '+n[0].toUpperCase()+n.slice(1);scrollTo(0,0);setMenu(false)}
+addEventListener('hashchange',route);
+$('#burger').onclick=()=>setMenu(!menu.classList.contains('open'));
+$('#logout').onclick=()=>{if(confirm('Are you sure you want to log out?')){toast('Logged out successfully','ok');location.hash='#/'}};
+document.addEventListener('click',e=>{
+ const g=e.target.closest('[data-go]');if(g){location.hash=g.dataset.go}
+ const t=e.target.closest('[data-toast]');if(t){e.preventDefault();toast(t.dataset.toast)}
+ if(e.target.closest('footer a[href="#"]'))e.preventDefault();
+ if(!e.target.closest('header'))setMenu(false)});
+route();
+})();
+</script>
+</body>
+</html>
