@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة تحكم الأدمن</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#262d38;--text:#e6edf3;--muted:#8b949e;--accent:#4f8cff;--green:#2ea043;--red:#e5484d;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px}
+.hidden{display:none!important}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+input{background:#0d1117;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 12px;font-size:15px;width:100%;font-family:inherit}
+input:focus{outline:none;border-color:var(--accent)}
+button{border:0;border-radius:10px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer;color:#fff;font-family:inherit;transition:opacity .15s}
+button:hover{opacity:.85}button:disabled{opacity:.5;cursor:wait}
+.primary{background:var(--accent)}.add{background:var(--green)}.sub{background:var(--red)}.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+/* Login */
+#login{max-width:380px;margin:12vh auto 0;text-align:center}
+#login h1{font-size:22px;margin-bottom:6px}#login p{color:var(--muted);margin-bottom:18px;font-size:14px}
+#login input{margin-bottom:12px;text-align:center}#login button{width:100%}
+.err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+/* Panel */
+#panel{max-width:960px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px}
+header h1{font-size:20px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:4px}.stat b{font-size:24px}
+h2{font-size:16px;margin-bottom:14px}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end}
+.form label{font-size:13px;color:var(--muted);display:block;margin-bottom:5px}
+.section{margin-bottom:16px}
+.bar{display:flex;gap:10px;margin-bottom:12px;align-items:center}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:12px 10px;text-align:right;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:13px}
+tr:last-child td{border-bottom:0}
+.bal{font-weight:700;color:#7ee787;font-size:16px}
+.ctrl{display:flex;gap:6px;align-items:center}
+.ctrl input{width:90px;padding:8px}.ctrl button{padding:8px 12px}
+.empty{text-align:center;color:var(--muted);padding:26px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222a35;border:1px solid var(--line);padding:12px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9}
+#toast.show{opacity:1}#toast.ok{border-color:var(--green)}#toast.bad{border-color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- شاشة تسجيل الدخول -->
+<div id="login" class="card">
+  <h1>🔐 لوحة تحكم الأدمن</h1>
+  <p>أدخل كلمة المرور السرية للمتابعة</p>
+  <input id="adminPass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+  <button class="primary" id="loginBtn">دخول</button>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<!-- لوحة التحكم -->
+<div id="panel" class="hidden">
+  <header>
+    <h1>🎮 إدارة المستخدمين والنقاط</h1>
+    <button class="ghost" id="logoutBtn">تسجيل خروج</button>
+  </header>
+
+  <div class="stats">
+    <div class="card stat"><span>عدد المستخدمين</span><b id="statUsers">0</b></div>
+    <div class="card stat"><span>إجمالي النقاط</span><b id="statPoints">0</b></div>
+  </div>
+
+  <div class="card section">
+    <h2>➕ إنشاء حساب جديد</h2>
+    <div class="form">
+      <div><label for="newUser">اسم المستخدم</label><input id="newUser" autocomplete="off"></div>
+      <div><label for="newPass">كلمة المرور</label><input id="newPass" type="text" autocomplete="off"></div>
+      <div><label for="newBal">الرصيد الابتدائي</label><input id="newBal" type="number" min="0" value="0"></div>
+      <button class="primary" id="createBtn">إنشاء الحساب</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>👥 المستخدمون</h2>
+    <div class="bar">
+      <input id="search" placeholder="🔎 بحث باسم المستخدم...">
+      <button class="ghost" id="refreshBtn">تحديث</button>
+    </div>
+    <div class="wrap">
+      <table>
+        <thead><tr><th>#</th><th>اسم المستخدم</th><th>الرصيد</th><th>تاريخ الإنشاء</th><th>تعديل النقاط</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ======== الإعدادات ======== */
+const SUPABASE_URL = "https://mwfgrhcgpxxxugefjaxq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EgF9UlJuDg87mpjh9LJtrA_lsDnbgo5";
+const ADMIN_PASSWORD = "admin1168"; // غيّرها كما تريد
+const TABLE = "users";
+/* ========================== */
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let users = [];
+
+function toast(msg, ok = true) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "show " + (ok ? "ok" : "bad");
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => t.className = "", 2600);
+}
+const fmt = n => Number(n || 0).toLocaleString("en-US");
+
+/* ---- تسجيل الدخول ---- */
+function showPanel() {
+  $("login").classList.add("hidden");
+  $("panel").classList.remove("hidden");
+  loadUsers();
+}
+function login() {
+  if ($("adminPass").value === ADMIN_PASSWORD) {
+    try { sessionStorage.setItem("adm", "1"); } catch (e) {}
+    $("loginErr").textContent = "";
+    showPanel();
+  } else {
+    $("loginErr").textContent = "كلمة المرور غير صحيحة";
+    $("adminPass").value = "";
+  }
+}
+$("loginBtn").onclick = login;
+$("adminPass").addEventListener("keydown", e => e.key === "Enter" && login());
+$("logoutBtn").onclick = () => {
+  try { sessionStorage.removeItem("adm"); } catch (e) {}
+  $("panel").classList.add("hidden");
+  $("login").classList.remove("hidden");
+  $("adminPass").value = "";
+};
+
+/* ---- تحميل وعرض المستخدمين ---- */
+async function loadUsers() {
+  const { data, error } = await db.from(TABLE).select("*").order("created_at", { ascending: false });
+  if (error) { toast("فشل تحميل البيانات: " + error.message, false); return; }
+  users = data || [];
+  render();
+}
+
+function render() {
+  const q = $("search").value.trim().toLowerCase();
+  const list = users.filter(u => String(u.username || "").toLowerCase().includes(q));
+  $("statUsers").textContent = fmt(users.length);
+  $("statPoints").textContent = fmt(users.reduce((s, u) => s + Number(u.balance || 0), 0));
+
+  const body = $("rows");
+  body.innerHTML = "";
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty">لا يوجد مستخدمون</td></tr>';
+    return;
+  }
+  list.forEach((u, i) => {
+    const tr = document.createElement("tr");
+    const cell = (text, cls) => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (cls) td.className = cls;
+      tr.appendChild(td);
+    };
+    cell(i + 1);
+    cell(u.username);
+    cell(fmt(u.balance), "bal");
+    cell(u.created_at ? new Date(u.created_at).toLocaleString("ar-MA-u-nu-latn") : "-");
+
+    const td = document.createElement("td");
+    td.innerHTML = '<div class="ctrl"><input type="number" min="1" placeholder="الكمية"><button class="add">+ إضافة</button><button class="sub">− خصم</button></div>';
+    const input = td.querySelector("input");
+    td.querySelector(".add").onclick = e => changeBalance(u.id, input, 1, e.target);
+    td.querySelector(".sub").onclick = e => changeBalance(u.id, input, -1, e.target);
+    tr.appendChild(td);
+    body.appendChild(tr);
+  });
+}
+$("search").addEventListener("input", render);
+$("refreshBtn").onclick = loadUsers;
+
+/* ---- تعديل الرصيد ---- */
+async function changeBalance(id, input, sign, btn) {
+  const amount = Number(input.value);
+  if (!amount || amount <= 0) { toast("أدخل كمية صحيحة أكبر من صفر", false); return; }
+  btn.disabled = true;
+  try {
+    // قراءة الرصيد الأحدث من القاعدة قبل التعديل
+    const { data: cur, error: e1 } = await db.from(TABLE).select("balance").eq("id", id).single();
+    if (e1) throw e1;
+    const next = Number(cur.balance || 0) + sign * amount;
+    if (next < 0) { toast("الرصيد لا يكفي للخصم", false); return; }
+    const { error: e2 } = await db.from(TABLE).update({ balance: next }).eq("id", id);
+    if (e2) throw e2;
+    toast(sign > 0 ? `تمت إضافة ${fmt(amount)} نقطة ✓` : `تم خصم ${fmt(amount)} نقطة ✓`);
+    await loadUsers();
+  } catch (err) {
+    toast("حدث خطأ: " + (err.message || err), false);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---- إنشاء حساب ---- */
+$("createBtn").onclick = async () => {
+  const username = $("newUser").value.trim();
+  const password = $("newPass").value;
+  const balance = Number($("newBal").value || 0);
+  if (!username || !password) { toast("اسم المستخدم وكلمة المرور مطلوبان", false); return; }
+  if (isNaN(balance) || balance < 0) { toast("الرصيد غير صالح", false); return; }
+
+  const btn = $("createBtn");
+  btn.disabled = true;
+  const { error } = await db.from(TABLE).insert([{ username, password, balance }]);
+  btn.disabled = false;
+  if (error) {
+    toast(error.code === "23505" ? "اسم المستخدم موجود مسبقاً" : "فشل الإنشاء: " + error.message, false);
+    return;
+  }
+  toast("تم إنشاء الحساب بنجاح ✓");
+  $("newUser").value = ""; $("newPass").value = ""; $("newBal").value = "0";
+  loadUsers();
+};
+
+/* ---- استعادة الجلسة ---- */
+try { if (sessionStorage.getItem("adm") === "1") showPanel(); } catch (e) {}
+</script>
+</body>
+</html>
